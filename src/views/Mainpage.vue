@@ -1375,6 +1375,7 @@ span {vertical-align: baseline;}
   font-size: 16px;
   font-weight: 800;
   font-family: 'NanumSquareRound';
+  cursor: pointer;
 }
 #setting_page .modal_background .modal_box h4 {
   padding: 12px 0;
@@ -1382,6 +1383,7 @@ span {vertical-align: baseline;}
   font-size: 16px;
   font-weight: 800;
   font-family: 'NanumSquareRound';
+  cursor: pointer;
 }
 .modal_background .modal_box button {
   padding: 16px 0 0 0;
@@ -1391,6 +1393,7 @@ span {vertical-align: baseline;}
   font-size: 16px;
   font-weight: 800;
   font-family: 'NanumSquareRound';
+  cursor: pointer;
 }
 #setting_page .modal_background .modal_box button {
   padding: 12px 0 0 0;
@@ -1400,6 +1403,7 @@ span {vertical-align: baseline;}
   font-size: 16px;
   font-weight: 800;
   font-family: 'NanumSquareRound';
+  cursor: pointer;
 }
 
 #wrap1 {
