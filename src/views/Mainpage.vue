@@ -405,7 +405,7 @@ export default {
 
             // nickName1 : 'abcd',
             opened : 1,
-            answerY_N:0,
+            answerY_N: 0,
             dayNum : 1,
             dayImg : 0,
             showStamp:false,

@@ -58,6 +58,7 @@ export default new Vuex.Store({
       state.userInfo = null
       state.token = '';
       localStorage.removeItem('login.accessToken')
+      localStorage.removeItem('vuex')
     },
     setAccessToken(state,token) {
       state.token = token;
