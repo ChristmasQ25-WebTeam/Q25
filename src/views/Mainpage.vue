@@ -384,6 +384,7 @@ import data from '../assets/test_data1.js';
 import { changePw } from '../api/changepw';
 import question from '../assets/test_data1.js';
 // import { config } from 'vue/types/umd';
+import { withdraw } from '../api/withdraw';
 
 
 export default {
@@ -476,7 +477,15 @@ export default {
       this.Q_gather_page=false;
       this.qna_answer_page=true;
 
-      this.dayNum = event.currentTarget.innerText[1];
+      if (isNaN(event.currentTarget.innerText[2])){
+        // console.log('true : 숫자가 아님')
+        this.dayNum = event.currentTarget.innerText[1];
+      }
+      else{
+        // console.log('false : 숫자임')
+        this.dayNum = event.currentTarget.innerText.substring(1,3);
+      }
+      // this.dayNum = event.currentTarget.innerText[1];
       // console.log('그냥 타겟 : '+event.target)
       // console.log('그냥 타겟(이너텍스트) : '+event.target.innerText)
       // console.log('현재 타겟 : '+event.currentTarget)
@@ -555,9 +564,8 @@ export default {
       this.signUp_page = false;
     },
     togo_home(){
+      this.$router.push({name: 'home'});
       this.goodbye_finish_page = false;
-      this.start_page = true;
-      this.pw_find_page = false;
     },
     togo_changePw_page(){
       this.Q_list_page = false;
@@ -604,24 +612,34 @@ export default {
     },
 
 
-    bye_submit(e){
-      e.preventDefault();
-      // api 받아와서 수정해야함
-      if(this.bye_email == ''){
+    async bye_submit(){
+      const withdrawData = {
+        email: this.bye_email,
+        password: this.bye_pw
+      }
+      const { data } = await withdraw(withdrawData);
+      console.log(data);
+      if(/* this.bye_email !== this.email || */ this.bye_email == ''){
         this.byeemailOpen = true;
         this.byepwOpen = false;
       }
-      else if(this.bye_pw == ''){
+      else if(/* this.bye_pw !== this.password || */ this.bye_pw == ''){
         this.byepwOpen = true;
       }
       else if(this.bye_email !== '' && this.bye_pw !== '' && this.bye_repw !== '' && this.RePw == true){
         this.goodbye_page = false;
         this.goodbye_finish_page = true;
+        this.initForm();
+
+        //탈퇴시 세션스토리지에 있는 token, useridx도 삭제
+        sessionStorage.removeItem('access_token')
+        sessionStorage.removeItem('userIdx')
+
       }
     },
     async changepw_submit(){
       const pwData = {
-        userIdx: 1,
+        userIdx: this.userInfo.userIdx,
         old_pw: this.old_pw,
         new_pw: this.new_pw
       }
@@ -651,6 +669,9 @@ export default {
     initForm() {
       this.old_pw = '';
       this.new_pw = '';
+      this.bye_email = '';
+      this.bye_pw = '';
+      this.bye_repw = '';
     },
     check(){
       this.nickOpen = false;
@@ -667,6 +688,7 @@ export default {
     },
     check_finish(){
       this.changepwOpen = false;
+      this.changePw_page = false;
       this.Q_list_page = true;
     },
     chkInput(){
@@ -706,7 +728,6 @@ export default {
         this.RePw = false;
       }
     },
-
     open_question(event) {
       if(event.target.classList.contains('stamp_sticker')){
          // console.log('포함되어있음')
@@ -719,12 +740,17 @@ export default {
          this.dayNum = parseInt(event.target.nextSibling.data);
          console.log(this.dayNum)
        }
-      
+      //  axios
+      //  .get('http://localhost:3001/api/members/question',this.config)
+      //  .then(res=> {
+      //    console.log('다시 받아온 opend값:'+res.data.result.question[this.dayNum-1].opened)
+      //  })
       this.opened = this.userInfo.question[this.dayNum-1].opened;
-      this.answerY_N = this.userInfo.question[this.dayNum-1].answerY_N;
-      
-      console.log("opened:" + this.opened, 'answerY_N:'+this.answerY_N)
+      this.answerY_N = this.userInfo.question[this.dayNum-1].answerY_N; 
+      // this.getBoxInfo()
+      console.log("처음 데이터베이스 상 opened:" + this.opened, 'answerY_N:'+this.answerY_N)
 
+      //답변 입력 페이지 -> qNum 전달 > 질문, 답변 받아오기
       let config2 = {
               headers : {
                 'access-token': this.token
@@ -737,44 +763,57 @@ export default {
             axios
             .get('http://localhost:3001/api/members/qnapage', config2)
             .then(res => {
-              console.log(res.data.result)
-              this.q= res.data.result.qnacontent
-              this.a= res.data.result.answer
-            })
+              if(res.data.message == '성공'){
+                console.log(res.data.message)
+                this.q= res.data.result.qnacontent
+                this.a= res.data.result.answer
+                axios
+                .get('http://localhost:3001/api/members/question',this.config)
+                .then(res=> {
+                  console.log('qNum 전달 후 다시 받아온 opend값:'+res.data.result.question[this.dayNum-1].opened)
+                  this.opened = res.data.result.question[this.dayNum-1].opened
+                  if(this.answerY_N==0){
+                    setTimeout(function(){
+                    this.qna_answer_page=true;
+                    this.loading_page=false;
+                    }.bind(this),2000)
+                    this.loading_page=true;
+                    this.Q_list_page=false;
+                  }
+                  else if(this.answerY_N==1){
+                    this.qna_answer_page=true;
+                    this.Q_list_page=false;
+                  }
+                })
+              }
+              else if(res.data.message == '아직 오픈 시간이 되지 않았습니다.'){
+                console.log(res.data.message)
+                this.ooops=true;
+              }
+              })
+              
+
+
+              
+            // })
             .catch(err => {
              console.log(err);
             })
 
-        if(this.opened==0){
-          this.ooops=true;
-        }
-        else if(this.opened==1){
-          // this.dayNum = parseInt(event.target.nextSibling.data);
-          console.log('dayNum:'+ this.dayNum);
-
-          if(this.answerY_N==0){
-            // this.loading_page=true;
-            
-            setTimeout(function(){
-              this.qna_answer_page=true;
-              this.loading_page=false;
-            }.bind(this),2000)
-            
-            this.loading_page=true;
-            this.Q_list_page=false;
-            
-            
-
-            
-          }
-         else if(this.answerY_N==1){
-            this.qna_answer_page=true;
-           this.Q_list_page=false;
-        }
-        }
+        
 
       // };
     },
+    // getBoxInfo(){
+    //   axios
+    //    .get('http://localhost:3001/api/members/question',this.config)
+    //    .then(res=> {
+    //      console.log('다시 받아온 opend값:'+res.data.result.question[this.dayNum-1].opened)
+    //      this.opened = res.data.result.question[this.dayNum-1].opened
+    //      console.log(this.opened)
+         
+    //    })
+    // },
     togo_setting_page() {
       this.setting_page=true;
     },
@@ -787,26 +826,19 @@ export default {
       this.Q_list_page=true;
     },
     submit() {
-      this.Q_list_page=true;
-      this.qna_answer_page=false;
       axios
       .patch('http://localhost:3001/api/members/useranswer',{
-        
           answer : this.a,
           userIdx : this.userInfo.userIdx,
           qNum : this.dayNum
-        
       })
-      .then(res => {
-        this.answerY_N = res.data.result.answerY_N;
-      })
+      .then(res => {this.answerY_N = res.data.result.answerY_N;})
       axios
       .get('http://localhost:3001/api/members/question', this.config)
-      .then(res => {
-            this.userInfo.question = res.data.result.question;
-          })
-
+      .then(res => {this.userInfo.question = res.data.result.question;})
       
+      this.Q_list_page=true;
+      this.qna_answer_page=false;
     }
 
     }
